@@ -23,10 +23,12 @@ Ext.define('CustomApp', {
         that.priorities = ["P1","P2","P3"];
         that.sizes = ["S","M","L","XL"];
         that.keys = [];
+        that.columnKeys = [];
         
         _.each(that.priorities,function(priority) {
             _.each(that.sizes,function(sz) {
                 that.keys.push(priority+"-"+sz);
+                that.columnKeys.push(priority.substring(0,2)+"-"+sz);
             });
         });
 
@@ -91,14 +93,17 @@ Ext.define('CustomApp', {
                     
                 }, "PortfolioItem/Feature","","Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
             
-            }, "PortfolioItem/Initiative","","Parent,ObjectID,Name,Value,PreliminaryEstimate");    
+            }, "PortfolioItem/Epic","","Parent,ObjectID,Name,Value,PreliminaryEstimate");    
         
         }, "PortfolioItem/Theme","","Parent,ObjectID,Name,Value,PreliminaryEstimate");
         
         
     }
     ,
-    
+    _cellRenderer : function(value) {
+        return ( value == 0 ? "" : value);
+    }
+    ,
     _createStore: function(summary) {
         
         var that = this;
@@ -109,9 +114,9 @@ Ext.define('CustomApp', {
                 { text: 'Theme',  dataIndex: 'Theme' },
                 { text: 'Epic', dataIndex: 'Epic' }
         ];
-        _.each(that.keys,function(key) {
+        _.each(that.keys,function(key,i) {
             fields.push(key);
-            columns.push({text:key,dataIndex:key,width:40});
+            columns.push({text:that.columnKeys[i],dataIndex:key,width:40, renderer: that._cellRenderer });
         });
         
         console.log("fields",fields);
