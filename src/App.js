@@ -48,7 +48,7 @@ Ext.define('CustomApp', {
                     _.each( results.Results, function(result) {
                         
                         result.Estimate = ( result.PreliminaryEstimate != null ? result.PreliminaryEstimate.Name : "None");
-                        result.Epic = ( result.Parent != null ? result.Parent.Name : "None");
+                        result.Epic = ( result.Parent != null ? result.Parent.FormattedID + ":" + result.Parent.Name : "None");
                         //result.Priority = "P1";
                         
                         // find the theme for the initiative
@@ -58,11 +58,15 @@ Ext.define('CustomApp', {
                             var init = _.find(epics, function(i) { return i.ObjectID == result.Parent.ObjectID });
                             if (init != null) {
                                 if (init.Parent !=null) {
-                                    result.Theme = init.Parent.Name;
+                                    result.Theme = init.Parent.FormattedID + ":" + init.Parent.Name;
                                 }
-                            }
+                            } 
                         }
+                        if (result.Theme == undefined || result.Theme == null)
+                            result.Theme = "None";
                     });
+                    
+                    console.log("results",results.Results)
                     
                     var ss = [];
                     
@@ -79,10 +83,10 @@ Ext.define('CustomApp', {
                                     var rec = _.find(ss, function(s) { return s.Theme == theme && s.Epic == epic});
                                     if (rec==null) {
                                         rec = that._createSummaryRecord(theme,epic);
-                                        console.log("rec",rec);
                                         ss.push(rec);
                                     }
                                     rec[priority+"-"+sizeBucket] = sizeBuckets[sizeBucket].length;
+                                    console.log("rec",rec);
                                 });
                             });
                         });
@@ -91,11 +95,11 @@ Ext.define('CustomApp', {
                     console.log("summary:",ss);
                     that._createStore(ss);                    
                     
-                }, "PortfolioItem/Feature","","Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
+                }, "PortfolioItem/Feature","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
             
-            }, "PortfolioItem/Epic","","Parent,ObjectID,Name,Value,PreliminaryEstimate");    
+            }, "PortfolioItem/Epic","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
         
-        }, "PortfolioItem/Theme","","Parent,ObjectID,Name,Value,PreliminaryEstimate");
+        }, "PortfolioItem/Theme","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");
         
         
     }
@@ -116,7 +120,7 @@ Ext.define('CustomApp', {
         ];
         _.each(that.keys,function(key,i) {
             fields.push(key);
-            columns.push({text:that.columnKeys[i],dataIndex:key,width:40, renderer: that._cellRenderer });
+            columns.push({text:that.columnKeys[i],dataIndex:key,width:40, renderer: that._cellRenderer, align : "center" });
         });
         
         console.log("fields",fields);
@@ -139,7 +143,8 @@ Ext.define('CustomApp', {
             xtype : 'gridpanel',
             title: 'Summary',
             store: Ext.data.StoreManager.lookup('ss'),
-            columns: columns
+            columns: columns,
+            columnLines : true
         });
     
     }
