@@ -73,6 +73,7 @@ Ext.define('CustomApp', {
                     var r = results.Results;
                     var themes = _.groupBy( r, "Theme" );
                     _.each( _.keys(themes), function(theme) {
+                        var themeTotal = that._createSummaryRecord(theme,"Total");
                         var epics = _.groupBy( themes[theme], "Epic" );
                         _.each( _.keys(epics), function(epic) {
                             var priorityBuckets = _.groupBy( epics[epic], "Priority");
@@ -87,10 +88,13 @@ Ext.define('CustomApp', {
                                     }
                                     rec[priority+"-"+sizeBucket] = sizeBuckets[sizeBucket].length;
                                     rec["Total"] = rec["Total"] + sizeBuckets[sizeBucket].length;
+                                    themeTotal[priority+"-"+sizeBucket] = themeTotal[priority+"-"+sizeBucket] + sizeBuckets[sizeBucket].length;
+                                    themeTotal["Total"] = themeTotal["Total"] + sizeBuckets[sizeBucket].length;
                                 });
                                 
                             });
                         });
+                        ss.push(themeTotal);
                     });
                     
                     console.log("summary:",ss);
@@ -146,7 +150,16 @@ Ext.define('CustomApp', {
             title: 'Summary',
             store: Ext.data.StoreManager.lookup('ss'),
             columns: columns,
-            columnLines : true
+            columnLines : true,
+            viewConfig: {
+                getRowClass: function(record, rowIndex, rowParams, store){
+                    console.log("record",record);
+                    if (record.get("Epic") == "Total") {
+                        console.log("total-row");
+                        return "total-row";
+                    }
+                }
+            }
         });
     
     }
