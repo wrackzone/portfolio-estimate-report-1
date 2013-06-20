@@ -89,7 +89,7 @@ Ext.define('CustomApp', {
                             var priorityBuckets = _.groupBy( epics[epic], "Priority");
                             _.each( _.keys(priorityBuckets), function(priority) {
                                 var sizeBuckets = _.groupBy( priorityBuckets[priority], "Estimate");
-                                _.each( _.keys( sizeBuckets), function( sizeBucket) {
+                                _.each( _.keys(sizeBuckets), function( sizeBucket) {
                                     // find the summary record
                                     var rec = _.find(ss, function(s) { return s.Theme == theme && s.Epic == epic});
                                     if (rec==null) {
@@ -97,8 +97,9 @@ Ext.define('CustomApp', {
                                         ss.push(rec);
                                     }
                                     rec[priority+"-"+sizeBucket] = sizeBuckets[sizeBucket].length;
-                                    console.log("rec",rec);
+                                    rec["Total"] = rec["Total"] + sizeBuckets[sizeBucket].length;
                                 });
+                                
                             });
                         });
                     });
@@ -124,10 +125,11 @@ Ext.define('CustomApp', {
         var that = this;
 
         var container = this.down("#grid");
-        var fields = ['Theme',"Epic"];
+        var fields = ['Theme',"Epic","Total"];
         var columns = [
                 { text: 'Theme',  dataIndex: 'Theme' },
-                { text: 'Epic', dataIndex: 'Epic' }
+                { text: 'Epic', dataIndex: 'Epic' },
+                { text: 'Total', dataIndex: 'Total',width:40 }
         ];
         _.each(that.keys,function(key,i) {
             fields.push(key);
@@ -163,7 +165,7 @@ Ext.define('CustomApp', {
     _createSummaryRecord: function(theme,epic) {
         
         var that = this;
-        var rec = { Theme : theme, Epic : epic };
+        var rec = { Theme : theme, Epic : epic, Total : 0 };
         
         _.each(that.keys, function(key) {
             rec[key] = 0;  
