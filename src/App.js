@@ -88,6 +88,7 @@ Ext.define('CustomApp', {
                                     }
                                     rec[priority+"-"+sizeBucket] = sizeBuckets[sizeBucket].length;
                                     rec["Total"] = rec["Total"] + sizeBuckets[sizeBucket].length;
+                                    // update theme totals
                                     themeTotal[priority+"-"+sizeBucket] = themeTotal[priority+"-"+sizeBucket] + sizeBuckets[sizeBucket].length;
                                     themeTotal["Total"] = themeTotal["Total"] + sizeBuckets[sizeBucket].length;
                                 });
