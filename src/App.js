@@ -106,8 +106,6 @@ Ext.define('CustomApp', {
             }, "PortfolioItem/Epic","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
         
         }, "PortfolioItem/Theme","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");
-        
-        
     }
     ,
     _cellRenderer : function(value) {
