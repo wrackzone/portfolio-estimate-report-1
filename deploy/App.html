@@ -3,7 +3,7 @@
 <head>
     <title>Hello</title>
 
-    <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
+<script type="text/javascript" src="https://rally1.rallydev.com/apps/2.0rc1/sdk-debug.js"></script>
 
 
 
@@ -117,8 +117,6 @@ Ext.define('CustomApp', {
             }, "PortfolioItem/Epic","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
         
         }, "PortfolioItem/Theme","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");
-        
-        
     }
     ,
     _cellRenderer : function(value) {
@@ -200,10 +198,11 @@ Ext.define('CustomApp', {
 			count += 200;
 			
 			console.log("fetch",fetch);
+            
 	
 			Ext.Ajax.request({
 				method: 'GET',
-				url: "https://rally1.rallydev.com/slm/webservice/1.39/"+typeName+".js",
+				url: "https://demo01.rallydev.com/slm/webservice/1.39/"+typeName+".js",
 				params: {
 					workspace : app.context.getWorkspace()._ref,
 					project   : app.context.getProject()._ref,

@@ -21,7 +21,7 @@ Ext.define('CustomApp', {
         var that = this;
         
         that.priorities = ["P1","P2","P3"];
-        that.sizes = ["S","M","L","XL"];
+        that.sizes = ["None","S","M","L","XL"];
         that.keys = [];
         that.columnKeys = [];
         
@@ -74,11 +74,13 @@ Ext.define('CustomApp', {
                     var themes = _.groupBy( r, "Theme" );
                     _.each( _.keys(themes), function(theme) {
                         var themeTotal = that._createSummaryRecord(theme,"Total");
+                        //var epics = _.groupBy( themes[theme], "Epic" );
                         var epics = _.groupBy( themes[theme], "Epic" );
                         _.each( _.keys(epics), function(epic) {
                             var priorityBuckets = _.groupBy( epics[epic], "Priority");
                             _.each( _.keys(priorityBuckets), function(priority) {
                                 var sizeBuckets = _.groupBy( priorityBuckets[priority], "Estimate");
+                                console.log("sizeBuckets:",sizeBuckets);
                                 _.each( _.keys(sizeBuckets), function( sizeBucket) {
                                     // find the summary record
                                     var rec = _.find(ss, function(s) { return s.Theme == theme && s.Epic == epic});
@@ -104,6 +106,7 @@ Ext.define('CustomApp', {
                 }, "PortfolioItem/Feature","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
             
             }, "PortfolioItem/Epic","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
+            //}, "PortfolioItem/Initiative","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
         
         }, "PortfolioItem/Theme","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");
     }
@@ -187,6 +190,7 @@ Ext.define('CustomApp', {
 			count += 200;
 			
 			console.log("fetch",fetch);
+            console.log("https://rally1.rallydev.com/slm/webservice/1.39/"+typeName+".js");
 	
 			Ext.Ajax.request({
 				method: 'GET',
