@@ -140,6 +140,7 @@ Ext.define('CustomApp', {
         
         container.add( { 
             xtype : 'gridpanel',
+            autoScroll : true,
             title: 'Summary',
             store: Ext.data.StoreManager.lookup('ss'),
             columns: columns,
