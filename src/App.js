@@ -20,8 +20,8 @@ Ext.define('CustomApp', {
         
         var that = this;
         
-        that.priorities = ["P1","P2","P3"];
-        that.sizes = ["None","S","M","L","XL"];
+        that.priorities = ["None","P1 - Baseline","P2 - Target","P3 - Stretch","P4 - Out of Release"];
+        that.sizes = ["None","Free","XXS","XS","S","M","L","XL","XXL"];     
         that.keys = [];
         that.columnKeys = [];
         
@@ -32,11 +32,6 @@ Ext.define('CustomApp', {
             });
         });
 
-        //  this.down('#selectButton').add({
-        //     xtype:  'button',
-        //     itemId: 'buttonSelect',
-        //     text:   'Select Feature'
-        // });
         that._runQuery( function(results) { 
             var themes = results.Results;
             
@@ -47,9 +42,9 @@ Ext.define('CustomApp', {
                     // preprocess
                     _.each( results.Results, function(result) {
                         
+                        result.Priority = ( result.Priority != null ? result.Priority : "None");
                         result.Estimate = ( result.PreliminaryEstimate != null ? result.PreliminaryEstimate.Name : "None");
                         result.Epic = ( result.Parent != null ? result.Parent.FormattedID + ":" + result.Parent.Name : "None");
-                        //result.Priority = "P1";
                         
                         // find the theme for the initiative
                         if (result.Parent != null) {
@@ -66,7 +61,7 @@ Ext.define('CustomApp', {
                             result.Theme = "None";
                     });
                     
-                    console.log("results",results.Results)
+                    
                     
                     var ss = [];
                     
@@ -100,13 +95,12 @@ Ext.define('CustomApp', {
                         ss.push(themeTotal);
                     });
                     
-                    console.log("summary:",ss);
+                    
                     that._createStore(ss);                    
                     
                 }, "PortfolioItem/Feature","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
             
             }, "PortfolioItem/Epic","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
-            //}, "PortfolioItem/Initiative","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
         
         }, "PortfolioItem/Theme","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");
     }
@@ -131,9 +125,6 @@ Ext.define('CustomApp', {
             columns.push({text:that.columnKeys[i],dataIndex:key,width:40, renderer: that._cellRenderer, align : "center" });
         });
         
-        console.log("fields",fields);
-        console.log("columns",columns);
-        
         Ext.create('Ext.data.Store', {
             storeId:'ss',
             fields: fields,
@@ -155,9 +146,7 @@ Ext.define('CustomApp', {
             columnLines : true,
             viewConfig: {
                 getRowClass: function(record, rowIndex, rowParams, store){
-                    console.log("record",record);
                     if (record.get("Epic") == "Total") {
-                        console.log("total-row");
                         return "total-row";
                     }
                 }
@@ -189,9 +178,6 @@ Ext.define('CustomApp', {
 		var process = function() {
 			count += 200;
 			
-			console.log("fetch",fetch);
-            console.log("https://rally1.rallydev.com/slm/webservice/1.39/"+typeName+".js");
-	
 			Ext.Ajax.request({
 				method: 'GET',
 				url: "https://rally1.rallydev.com/slm/webservice/1.39/"+typeName+".js",
@@ -205,12 +191,8 @@ Ext.define('CustomApp', {
 					query: query
 				},
 				success: function(res) {
-					//console.log("res",res);
 					res = JSON.parse(res.responseText);
-	                      console.log("res",res);
 					qr.Results = qr.Results.concat(res.QueryResult.Results);
-					//console.log("qr.results",qr.Results);
-					//if (res.QueryResult.TotalResultCount >= qr.Results.length) {
 					if (res.QueryResult.Results.length < 200) {
 						cb(qr,app);
 					} else {

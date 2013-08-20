@@ -3,7 +3,7 @@
 <head>
     <title>Hello</title>
 
-<script type="text/javascript" src="https://rally1.rallydev.com/apps/2.0rc1/sdk-debug.js"></script>
+    <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
 
 
 
@@ -31,8 +31,8 @@ Ext.define('CustomApp', {
         
         var that = this;
         
-        that.priorities = ["P1","P2","P3"];
-        that.sizes = ["S","M","L","XL"];
+        that.priorities = ["None","P1 - Baseline","P2 - Target","P3 - Stretch","P4 - Out of Release"];
+        that.sizes = ["None","Free","XXS","XS","S","M","L","XL","XXL"];     
         that.keys = [];
         that.columnKeys = [];
         
@@ -43,11 +43,6 @@ Ext.define('CustomApp', {
             });
         });
 
-        //  this.down('#selectButton').add({
-        //     xtype:  'button',
-        //     itemId: 'buttonSelect',
-        //     text:   'Select Feature'
-        // });
         that._runQuery( function(results) { 
             var themes = results.Results;
             
@@ -58,9 +53,9 @@ Ext.define('CustomApp', {
                     // preprocess
                     _.each( results.Results, function(result) {
                         
+                        result.Priority = ( result.Priority != null ? result.Priority : "None");
                         result.Estimate = ( result.PreliminaryEstimate != null ? result.PreliminaryEstimate.Name : "None");
                         result.Epic = ( result.Parent != null ? result.Parent.FormattedID + ":" + result.Parent.Name : "None");
-                        //result.Priority = "P1";
                         
                         // find the theme for the initiative
                         if (result.Parent != null) {
@@ -77,7 +72,7 @@ Ext.define('CustomApp', {
                             result.Theme = "None";
                     });
                     
-                    console.log("results",results.Results)
+                    
                     
                     var ss = [];
                     
@@ -85,11 +80,13 @@ Ext.define('CustomApp', {
                     var themes = _.groupBy( r, "Theme" );
                     _.each( _.keys(themes), function(theme) {
                         var themeTotal = that._createSummaryRecord(theme,"Total");
+                        //var epics = _.groupBy( themes[theme], "Epic" );
                         var epics = _.groupBy( themes[theme], "Epic" );
                         _.each( _.keys(epics), function(epic) {
                             var priorityBuckets = _.groupBy( epics[epic], "Priority");
                             _.each( _.keys(priorityBuckets), function(priority) {
                                 var sizeBuckets = _.groupBy( priorityBuckets[priority], "Estimate");
+                                console.log("sizeBuckets:",sizeBuckets);
                                 _.each( _.keys(sizeBuckets), function( sizeBucket) {
                                     // find the summary record
                                     var rec = _.find(ss, function(s) { return s.Theme == theme && s.Epic == epic});
@@ -109,7 +106,7 @@ Ext.define('CustomApp', {
                         ss.push(themeTotal);
                     });
                     
-                    console.log("summary:",ss);
+                    
                     that._createStore(ss);                    
                     
                 }, "PortfolioItem/Feature","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
@@ -139,9 +136,6 @@ Ext.define('CustomApp', {
             columns.push({text:that.columnKeys[i],dataIndex:key,width:40, renderer: that._cellRenderer, align : "center" });
         });
         
-        console.log("fields",fields);
-        console.log("columns",columns);
-        
         Ext.create('Ext.data.Store', {
             storeId:'ss',
             fields: fields,
@@ -163,9 +157,7 @@ Ext.define('CustomApp', {
             columnLines : true,
             viewConfig: {
                 getRowClass: function(record, rowIndex, rowParams, store){
-                    console.log("record",record);
                     if (record.get("Epic") == "Total") {
-                        console.log("total-row");
                         return "total-row";
                     }
                 }
@@ -197,12 +189,9 @@ Ext.define('CustomApp', {
 		var process = function() {
 			count += 200;
 			
-			console.log("fetch",fetch);
-            
-	
 			Ext.Ajax.request({
 				method: 'GET',
-				url: "https://demo01.rallydev.com/slm/webservice/1.39/"+typeName+".js",
+				url: "https://rally1.rallydev.com/slm/webservice/1.39/"+typeName+".js",
 				params: {
 					workspace : app.context.getWorkspace()._ref,
 					project   : app.context.getProject()._ref,
@@ -213,12 +202,8 @@ Ext.define('CustomApp', {
 					query: query
 				},
 				success: function(res) {
-					//console.log("res",res);
 					res = JSON.parse(res.responseText);
-	                      console.log("res",res);
 					qr.Results = qr.Results.concat(res.QueryResult.Results);
-					//console.log("qr.results",qr.Results);
-					//if (res.QueryResult.TotalResultCount >= qr.Results.length) {
 					if (res.QueryResult.Results.length < 200) {
 						cb(qr,app);
 					} else {
