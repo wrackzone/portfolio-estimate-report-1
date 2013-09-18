@@ -1,3 +1,5 @@
+var app;
+
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
@@ -5,7 +7,20 @@ Ext.define('CustomApp', {
     {
         xtype: 'container',
         itemId: 'selectButton',
-        columnWidth: 1
+        columnWidth: 1,
+        items : [
+            {
+                xtype : 'rallymultiobjectpicker',
+                modelType : 'tag',
+                listeners : {
+                    collapse : function( field, eOpts ) {
+                        console.log(field.getValue());
+                        app.createTable(field.getValue());
+                    },
+                    scope : this
+                }
+            }
+        ]
     }
     ,
     {
@@ -17,8 +32,14 @@ Ext.define('CustomApp', {
     ],
     
     launch: function() {
+        app = this;
+        this.createTable();
+    },
+    
+    createTable : function(tags) {
         
         var that = this;
+        that.down("#grid").removeAll();
         
         that.priorities = ["None","P1 - Baseline","P2 - Target","P3 - Stretch","P4 - Out of Release"];
         that.sizes = ["None","Free","XXS","XS","S","M","L","XL","XXL"];     
@@ -31,9 +52,18 @@ Ext.define('CustomApp', {
                 that.columnKeys.push(priority.substring(0,2)+"-"+sz);
             });
         });
+        
+        // filter by tags if specified
+        var themeQuery = "";
+        if ( !_.isUndefined(tags) && tags.length > 0  ) {
+            var q = that.createTagsQuery(tags);
+            themeQuery = q.toString();
+            console.log("query=",themeQuery);
+        }
 
         that._runQuery( function(results) { 
-            var themes = results.Results;
+            var resultThemes = results.Results;
+            console.log("Themes:",resultThemes.length);
             
             that._runQuery( function(results) { 
                 var epics = results.Results;
@@ -60,13 +90,11 @@ Ext.define('CustomApp', {
                         if (result.Theme == undefined || result.Theme == null)
                             result.Theme = "None";
                     });
-                    
-                    
-                    
+
                     var ss = [];
-                    
                     var r = results.Results;
                     var themes = _.groupBy( r, "Theme" );
+
                     _.each( _.keys(themes), function(theme) {
                         var themeTotal = that._createSummaryRecord(theme,"Total");
                         //var epics = _.groupBy( themes[theme], "Epic" );
@@ -75,7 +103,7 @@ Ext.define('CustomApp', {
                             var priorityBuckets = _.groupBy( epics[epic], "Priority");
                             _.each( _.keys(priorityBuckets), function(priority) {
                                 var sizeBuckets = _.groupBy( priorityBuckets[priority], "Estimate");
-                                console.log("sizeBuckets:",sizeBuckets);
+                                //console.log("sizeBuckets:",sizeBuckets);
                                 _.each( _.keys(sizeBuckets), function( sizeBucket) {
                                     // find the summary record
                                     var rec = _.find(ss, function(s) { return s.Theme == theme && s.Epic == epic});
@@ -95,16 +123,25 @@ Ext.define('CustomApp', {
                         ss.push(themeTotal);
                     });
                     
-                    
+                    console.log("summary rows:",ss.length);
+                    // filter to only the themes in the results
+                    ss = _.filter(ss, function (s) {
+                        return _.find( resultThemes, function(rt) {
+                            if ( s.Theme == rt.FormattedID + ":" + rt.Name || s.Theme == "None" )
+                                return true;
+                            else {
+                                return false;
+                            }
+                        });
+                    });
+                    console.log("filtered:",ss.length);
                     that._createStore(ss);                    
                     
                 }, "PortfolioItem/Feature","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate,Priority");
-            
             }, "PortfolioItem/Epic","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");    
-        
-        }, "PortfolioItem/Theme","","FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate");
-    }
-    ,
+        }, "PortfolioItem/Theme",themeQuery,"FormattedID,Parent,ObjectID,Name,Value,PreliminaryEstimate","FormattedID");
+    },
+    
     _cellRenderer : function(value) {
         return ( value == 0 ? "" : value);
     }
@@ -112,7 +149,6 @@ Ext.define('CustomApp', {
     _createStore: function(summary) {
         
         var that = this;
-
         var container = this.down("#grid");
         var fields = ['Theme',"Epic","Total"];
         var columns = [
@@ -137,7 +173,7 @@ Ext.define('CustomApp', {
                 }
             }
         });
-        
+
         container.add( { 
             xtype : 'gridpanel',
             autoScroll : true,
@@ -167,9 +203,18 @@ Ext.define('CustomApp', {
         });
         
         return rec;
-    }
-    ,
-    _runQuery : function(cb,typeName,query,fetch) {
+    },
+
+    createTagsQuery : function(tags) {
+        var filter;
+        _.each(tags, function(tag,i) {
+            var f = Ext.create('Rally.data.QueryFilter', { property: 'Tags.Name', operator: '=', value: tag.data._refObjectName });
+            filter = i == 0 ? f : filter.and(f);
+        });
+        return filter;
+    },
+
+    _runQuery : function(cb,typeName,query,fetch,order) {
     
     	var qr = {
 			Results : []	
@@ -190,7 +235,8 @@ Ext.define('CustomApp', {
 					pagesize: 200,
 					start: count,
                     fetch: fetch,
-					query: query
+					query: query,
+					order : order
 				},
 				success: function(res) {
 					res = JSON.parse(res.responseText);
